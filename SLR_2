@@ -1,0 +1,83 @@
+#importing pandas and numpy libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+#importing pandas_profiling and sweetviz libraries to perform EDA
+import pandas_profiling as pp
+import sweetviz as sv
+
+#reading the csv data file with pd.read_csv() function
+Salary = pd.read_csv('C:/Users/17pol/Downloads/Salary_Data.csv')
+
+#creating copy of original data before EDA
+df2 = Salary.copy()
+Salary.head()                                                #Getting a head/short view of the first 5 rows of data
+Salary.dtypes                                                #check the datatypes of the columns in data
+
+Salary.info()                                                # Get information of non-null values in data and the shape of the dataframe
+Salary.shape
+
+Salary.isnull().sum()                                        #Getting the total number of null values
+Salary.duplicated()                                          #to check if any duplicates present
+
+#Outlier detection
+%matplotlib inline                                           # to get plots in the same window
+Salary['Salary'].hist()
+Salary.describe()
+
+#Normalization of data
+from numpy import set_printoptions
+from sklearn.preprocessing import MinMaxScaler
+
+array = Salary.values                                        #Values in an array
+scaler = MinMaxScaler(feature_range = (0,7))                 #Scaling the values to range 0 to 7
+rescaledSalary = scaler.fit_transform(array[:,1:2])
+
+salary = pd.DataFrame(rescaledSalary)                        #Rechecking the normalization and outlier tranformation
+salary.describe()
+
+#Not successful transformation
+#Standardizing the sample
+from sklearn.preprocessing import StandardScaler
+array = Salary.values
+scaler = StandardScaler().fit(array)
+rescaledX = scaler.transform(array)
+
+set_printoptions(precision = 2)                             #setting the precision of values to 2
+print(rescaledX)
+
+#Rechecking the normalization and outlier tranformation
+X = pd.DataFrame(rescaledX)
+X.describe()
+#Successful transformation
+
+#Naming the columns of the normalized dataframe
+X.columns = ['Exp','Salary']
+X.columns
+
+#creating a linear regression model to get expected salary from given years of experience
+import statsmodels.formula.api as smf
+model = smf.ols('Salary~Exp', data = X).fit()
+
+model.params                                                #checking the model parameters
+import seaborn as sns                                       #importing seaborn library for visualization
+
+sns.regplot(x = 'Exp', y ='Salary', data = X)               #Getting model visualization with sns.regplot command
+
+experience = float(input('Years of experience '))           #Getting experience and current salary inputs from user and storing them in variables
+salary = float(input('Input current salary '))
+
+exp = pd.Series([experience])                               #Converting the input to a series and then a dataframe for use in model prediction
+exp = pd.DataFrame(exp, columns = ['Exp'])
+
+#Predicting the expected salary from the input years of experience
+ExpSlry = model.predict(exp)
+
+#Returned prediction is in standard scale. Converting the predicted value to normal scale
+ExptdSalary = ExpSlry*df2['Salary'].std()+df2['Salary'].mean()
+
+#Calculating the Hike percentage from the predicted salary and input current salary
+Hike = round((ExptdSalary - salary)*100/salary,2)
+#print the expected hike in salary for the user
+print('You may get a hike of',Hike[0],'% based on your experience')
