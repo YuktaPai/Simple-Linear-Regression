@@ -1,0 +1,59 @@
+
+import pandas as pd                                #importing pandas and numpy libraries
+import numpy as np
+import seaborn as sns                              #importing seaborn library for visualization
+import pandas_profiling as pp                      #importing pandas_profiling and sweetviz libraries to perform EDA
+import sweetviz as sv
+
+del_time = pd.read_csv('C:/Users/17pol/Downloads/delivery_time.csv')    #reading the csv data file with pd.read_csv() function
+df1 = del_time.copy()                                                   #creating copy of original data before EDA
+
+del_time.head()                                                         #Getting a head/short view of the first 5 rows of data
+del_time.dtypes                                                         #check the datatypes of the columns in data
+del_time['Sorting Time'] = del_time['Sorting Time'].astype('float')     #changing the SortingTime datatype to float
+del_time.dtypes                                                         # Get information of non-null values in data and the shape of the dataframe
+del_time.info()
+del_time.shape
+
+del_time.isnull().sum()                                                #Getting the total number of null values
+del_time.duplicated()                                                  #to check if any duplicates present
+del_time[del_time.duplicated()]                                        #to print the duplicates
+data[del_time.duplicated()].shape                                      #shape of the duplicates data frame
+del_time=del_time.drop_duplicates()                                    #dropping the duplicates
+
+%matplotlib inline                                                     # to get plots in the same window
+del_time['Delivery Time'].hist()                                       #Outlier detection
+del_time.describe()
+
+import seaborn as sns                                                  #importing seaborn library for visualization
+%matplotlib inline                                                     #special command to get the output visualization on the same window
+
+sns.pairplot(df1)                                                      #Pairplots of the variables in data
+del_time.corr()                                                        #Check for correlation of the variables
+
+#because correlation between the variables delivery time and sorting time is good, of corr value of 0.825, we go ahead with model building
+
+#To check if the data variables have similar distributions
+sns.distplot(del_time['Sorting Time'])
+sns.distplot(del_time['Delivery Time'])
+
+
+#Renaming the columns in data for convenience
+del_time = del_time.rename({'Delivery Time':'DelTime'}, axis = 1)
+del_time = del_time.rename({'Sorting Time': 'SortTime'}, axis = 1)
+
+
+#importing statsmodels.formula.api library for ols model building
+import statsmodels.formula.api as smf
+model = smf.ols('DelTime~SortTime', data = del_time).fit()             #creating fit model for the imported data
+
+sns.regplot(x = 'SortTime', y ='DelTime', data = del_time)             #Getting model visualization with sns.regplot command
+
+model.params                                                           #getting the model parameters
+                               
+st = float(input('Input Soting time '))
+st = pd.Series([st])                                                   #predicting delivery time with input sorting time 
+st = pd.DataFrame(st, columns =['SortTime'])
+Del_time = model.predict(st)
+
+print('The delivery time based the input sorting time is ',Del_time)   #printing the output
